@@ -32,3 +32,22 @@ INSERT INTO books (title, img, category_id, form, isbn, summary, detail, author,
 VALUES ("혹부리 영감", 22, 2, "ebook", 10, "노래 주머니..", "혹 두개 되버림..", "김영감", 100, "목차입니다.", 20000, "2023-06-05");
 
 SELECT * FROM books LEFT JOIN category ON books.category_id = category.id WHERE books.id= 1;
+
+INSERT INTO likes (user_id, liked_book_id) VALUES(1,1);
+INSERT INTO likes (user_id, liked_book_id) VALUES(1,2);
+INSERT INTO likes (user_id, liked_book_id) VALUES(1,3);
+INSERT INTO likes (user_id, liked_book_id) VALUES(3,1);
+INSERT INTO likes (user_id, liked_book_id) VALUES(4,4);
+INSERT INTO likes (user_id, liked_book_id) VALUES(2,1);
+INSERT INTO likes (user_id, liked_book_id) VALUES(2,3);
+INSERT INTO likes (user_id, liked_book_id) VALUES(2,4);
+
+DELETE FROM likes WHERE user_id = 1 AND liked_book_id = 33;
+
+// table의 조건을 만족하는 행 개수
+SELECT count(*) FROM likes WHERE liked_book_id = books.id
+
+// 좋아요 개수가 포함된 books 테이블 조회
+SELECT *, (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes FROM books;
+
+SELECT EXISTS (SELECT  * FROM likes WHERE user_id=1 AND liked_book_id=1
