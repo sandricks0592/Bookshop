@@ -50,4 +50,15 @@ SELECT count(*) FROM likes WHERE liked_book_id = books.id
 // 좋아요 개수가 포함된 books 테이블 조회
 SELECT *, (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes FROM books;
 
-SELECT EXISTS (SELECT  * FROM likes WHERE user_id=1 AND liked_book_id=1
+SELECT EXISTS (SELECT  * FROM likes WHERE user_id=1 AND liked_book_id=1)
+
+// 장바구니 담기
+INSERT INTO cartItems (book_id, quantity, user_id) VALUES (1,1,1);
+
+// 장바구니 조회
+SELECT cartItems.id, book_id, title, summary, quantity, price 
+FROM cartItems LEFT JOIN books 
+ON cartItems.book_id = books.id;
+
+// 장바구니에서 선택한 (장바구니 id) 아이템 목록 조회 (= 선택한 장바구니 상품 목록 조회)
+SELECT * FROM Bookshop.cartItems WHERE user_id=1 AND id IN (1,3)
