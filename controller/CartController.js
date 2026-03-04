@@ -1,32 +1,30 @@
+const ensureAuthorization = require("../auth"); // 인증 모듈
+const jwt = require('jsonwebtoken');
 const conn = require('../mariadb'); // db 모듈
 const {StatusCodes} = require('http-status-codes'); // status code 모듈
+const dotenv = require('dotenv');
+dotenv.config();
 
 
-
+// 장바구니 담기
 const addToCart = (req,res) => {
-    const {book_id, quantity, user_id} = req.body;
+    const {book_id, quantity} = req.body;
 
-    let sql = `INSERT INTO cartItems (book_id, quantity, user_id) VALUES (?,?,?);`;
-    let values = [user_id, quantity, user_id];
-    conn.query(sql,values, 
-        (err, results) => {
-            if(err) {
-                console.log(err);
-                return res.status(StatusCodes.BAD_REQUEST).end(); // BAD REQUEST
-            }
+    let authorization = ensureAuthorization(req,res);
 
-            res.status(StatusCodes.OK).json(results);
-    })
-};
+    if(authorization instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+            "message" : "로그인 세션이 만료되었습니다. 다시 로그인 하세요."
+        });
+    } else if (authorization instanceof jwt.JsonWebTokenError){ 
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            "message" : "잘못된 토큰입니다."
+        });
+    }else {
 
-const getCartItems = (req,res) => {
-        const {user_id, selected} = req.body;
-        let sql = `SELECT cartItems.id, book_id, title, summary, quantity, price 
-                    FROM cartItems LEFT JOIN books 
-                    ON cartItems.book_id = books.id
-                    WHERE user_id=? AND cartItems.id IN (?);`;
-        let values = [user_id, selected]
-        conn.query(sql,values,
+        let sql = `INSERT INTO cartItems (book_id, quantity, user_id) VALUES (?,?,?);`;
+        let values = [book_id, quantity, authorization.id];
+        conn.query(sql,values, 
             (err, results) => {
                 if(err) {
                     console.log(err);
@@ -35,13 +33,50 @@ const getCartItems = (req,res) => {
 
                 res.status(StatusCodes.OK).json(results);
         })
+    }
 };
 
+// 장바구니 아이템 목록 조회
+const getCartItems = (req,res) => {
+        const {selected} = req.body;
+
+        let authorization = ensureAuthorization(req,res);
+
+        if(authorization instanceof jwt.TokenExpiredError) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({
+                "message" : "로그인 세션이 만료되었습니다. 다시 로그인 하세요."
+            });
+        } else if (authorization instanceof jwt.JsonWebTokenError){ 
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                "message" : "잘못된 토큰입니다."
+            });
+        }else {
+            let sql = `SELECT cartItems.id, book_id, title, summary, quantity, price 
+                        FROM cartItems LEFT JOIN books 
+                        ON cartItems.book_id = books.id
+                        WHERE user_id=? AND cartItems.id IN (?);`;
+            let values = [authorization.id, selected]
+            conn.query(sql,values,
+                (err, results) => {
+                    if(err) {
+                        console.log(err);
+                        return res.status(StatusCodes.BAD_REQUEST).end(); // BAD REQUEST
+                    }
+
+                    res.status(StatusCodes.OK).json(results);
+        })
+        }
+        
+
+
+};
+
+// 장바구니 아이템 삭제
 const removeCartItem = (req,res) => {
-        const {id} = req.params; // cartItemId
+        const cartItemId = req.params.id; // cartItemId
         
         let sql = `DELETE FROM cartItems WHERE id = ? `;
-        conn.query(sql,id, 
+        conn.query(sql, cartItemId, 
             (err, results) => {
                 if(err) {
                     console.log(err);
@@ -51,7 +86,5 @@ const removeCartItem = (req,res) => {
                 res.status(StatusCodes.OK).json(results);
         })
 };
-
-
 
 module.exports = {addToCart,getCartItems,removeCartItem};

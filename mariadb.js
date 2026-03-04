@@ -10,4 +10,5 @@ const connection = mariadb.createConnection({
     dateStrings : true
 });
 
+
 module.exports = connection;
