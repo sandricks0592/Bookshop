@@ -2,8 +2,7 @@ const ensureAuthorization = require("../auth"); // 인증 모듈
 const jwt =  require("jsonwebtoken");
 const conn = require('../mariadb'); // db 모듈
 const {StatusCodes} = require('http-status-codes'); // status code 모듈
-const dotenv = require("dotenv");
-dotenv.config();
+
 
 const addLike = (req,res) => {
     // 좋아요 추가
@@ -59,6 +58,6 @@ const removeLike = (req,res) => {
                         res.status(StatusCodes.OK).json(results);
                 })
             }
-}
+};
 
 module.exports = {addLike,removeLike};

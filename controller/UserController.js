@@ -28,11 +28,12 @@ const join = (req,res) => {
                 return res.status(StatusCodes.BAD_REQUEST).end(); // BAD REQUEST
             }
 
-            res.status(201).json(results);
-        }
-
-    )
-}
+            if(results.affectedRows)
+                return res.status(StatusCodes.CREATED).json(results);
+            else 
+                return res.status(StatusCodes.BAD_REQUEST).end();
+        })
+};
 
 const login = (req,res) => {
     const {email, password} = req.body;
